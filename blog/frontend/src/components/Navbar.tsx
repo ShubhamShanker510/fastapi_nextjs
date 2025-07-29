@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 
 type NavItem = {
   name: string;
@@ -12,9 +9,9 @@ type NavItem = {
 
 
 const navigation: NavItem[] = [
-  { name: "Home", href: "/", current: true },
-  { name: "Create", href: "/create", current: false },
-  { name: "My Post", href: "/myposts", current: false },
+  { name: "Home", href: "/posts", current: true },
+  { name: "Create", href: "/posts/create", current: false },
+  { name: "My Post", href: "/posts/myposts", current: false },
 ];
 
 function classNames(...classes: (string | undefined | null | false)[]) {
@@ -23,10 +20,10 @@ function classNames(...classes: (string | undefined | null | false)[]) {
 
 export default function Navbar({ title }: { title?: string}) {
   return (
-    <nav className="z-10 bg-white dark:bg-gray-900 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
+    <nav className="z-10 bg-white dark:bg-gray-900 fixed w-full top-0 start-0 border-b border-gray-200 dark:border-gray-600">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3 rtl:space-x-reverse">
+        <Link href="/posts" className="flex items-center space-x-3 rtl:space-x-reverse">
           <Image
             src="https://flowbite.com/docs/images/logo.svg"
             alt="Logo"

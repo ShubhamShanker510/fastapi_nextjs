@@ -1,18 +1,24 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Input from "./ui/Input";
+import Button from "./ui/Button";
+import LinkText from "./ui/Link";
+import { tryLoadManifestWithRetries } from "next/dist/server/load-components";
+import { loginUser, registerUser } from "@/services/auth_api";
 
 type AuthFormProps = {
   isLogin: boolean;
 };
 
 export default function AuthForm({ isLogin }: AuthFormProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     repeatPassword: "",
-    userName: "",
+    username: "",
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +29,7 @@ export default function AuthForm({ isLogin }: AuthFormProps) {
     setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isLogin && formData.password !== formData.repeatPassword) {
@@ -32,50 +38,71 @@ export default function AuthForm({ isLogin }: AuthFormProps) {
     }
 
     if (isLogin) {
-      console.log("Logging in with:", {
-        email: formData.email,
-        password: formData.password,
-      });
+      try {
+        const data = await loginUser(formData.email, formData.password);
+        console.log("✅ Login successfully:", data);
+        router.push("/posts");
+      } catch (error: any) {
+        console.error(
+          "❌ Login failed:",
+          error.response?.data || error.message
+        );
+      }
     } else {
-      console.log("Registering:", formData);
+      try {
+        const data = await registerUser(
+          formData.username,
+          formData.email,
+          formData.password
+        );
+        console.log("✅ Registered successfully:", data);
+        router.push("/login");
+      } catch (error: any) {
+        console.error(
+          "❌ Registration failed:",
+          error.response?.data || error.message
+        );
+      }
     }
   };
 
   return (
-    <form
-      className="z-20 relative max-w-md mx-auto p-4"
-      onSubmit={handleSubmit}
-    >
-      {error && <p className="text-red-600 mb-4">{error}</p>}
-      {!isLogin && (
-      <Input
-        label="Username"
-        name="userName"
-        value={formData.userName}
-        onChange={handleChange}
-        required
-      />
-      )}
-      <Input
-        label="Email address"
-        type="email"
-        name="email"
-        value={formData.email}
-        onChange={handleChange}
-        required
-      />
+    <div className="flex min-h-screen justify-center items-center bg-gray-100">
+      <form
+        className="bg-white p-8 rounded-lg shadow-md max-w-md w-full"
+        onSubmit={handleSubmit}
+      >
+        {error && <p className="text-red-600 mb-4">{error}</p>}
 
-      <Input
-        label="Password"
-        type="password"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-        required
-      />
+        {!isLogin && (
+          <Input
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+        )}
 
-      {!isLogin && (
-        <>
+        <Input
+          label="Email address"
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+
+        <Input
+          label="Password"
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+        />
+
+        {!isLogin && (
           <Input
             label="Confirm Password"
             type="password"
@@ -84,72 +111,18 @@ export default function AuthForm({ isLogin }: AuthFormProps) {
             onChange={handleChange}
             required
           />
-        </>
-      )}
+        )}
 
-      <button
-        type="submit"
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
-      >
-        {isLogin ? "Login" : "Register"}
-      </button>
-      {
-        (!isLogin? <> <p className="text-sm text-center mt-4">
-        Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 hover:underline">
-          Click here to login
-        </Link>
-      </p></> : <> <p className="text-sm text-center mt-4">
-        Dont have an account?{" "}
-        <Link href="/register" className="text-blue-600 hover:underline">
-          Click here to register
-        </Link>
-      </p></>)
-      }
-     
-    </form>
-  );
-}
+        <Button type="submit">{isLogin ? "Login" : "Register"}</Button>
 
-type InputProps = {
-  label: string;
-  name: string;
-  type?: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  required?: boolean;
-  pattern?: string;
-};
-
-function Input({
-  label,
-  name,
-  value,
-  onChange,
-  type = "text",
-  required = false,
-  pattern,
-}: InputProps) {
-  const id = name;
-  return (
-    <div className="relative z-0 w-full mb-5 group">
-      <input
-        type={type}
-        name={name}
-        id={id}
-        value={value}
-        onChange={onChange}
-        className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-        placeholder=" "
-        required={required}
-        pattern={pattern}
-      />
-      <label
-        htmlFor={id}
-        className="peer-focus:font-medium absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:text-blue-600"
-      >
-        {label}
-      </label>
+        <LinkText
+          textBefore={
+            isLogin ? "Don’t have an account?" : "Already have an account?"
+          }
+          href={isLogin ? "/register" : "/login"}
+          linkText={isLogin ? "Click here to register" : "Click here to login"}
+        />
+      </form>
     </div>
   );
 }
