@@ -36,7 +36,9 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
         value=access_token,
         httponly=True,
         secure=True,   # 🔐 use False in local dev if needed
-        samesite="lax"
+        samesite="None",
+        max_age=60 * 15,
+        path="/"  
     )
     return response
 
